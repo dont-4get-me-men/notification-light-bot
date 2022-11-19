@@ -2,43 +2,32 @@ import asyncio
 import pprint
 
 import aioschedule
-from config import BOT_TOKEN, CHANNEL_ID
+from config import BOT_TOKEN, CHANNEL_ID, IP
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ContentType
 from aiogram.utils import executor
-
+from ping import is_ping_available, AccessibilityCheck
 
 bot = Bot(token=BOT_TOKEN)
-
 dp = Dispatcher(bot)
 
-def exemle():
-    pass
-
-async def process_do_it_4_all(message: types.Message):
-    pprint.pprint(message)
-    a = 12
-    await message.reply()
 
 @dp.message_handler(commands=['ping'])
-async def process_do_it_4_all(message: types.Message):
-    await bot.send_message(CHANNEL_ID, 'ok')
+async def try_ping_my_router(message: types.Message):
+    if is_ping_available(IP):
+        await bot.send_message(CHANNEL_ID, 'now u can work')
+    else:
+        await bot.send_message(CHANNEL_ID, 'now u cant work, loh')
+
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def unknown_message(msg: types.Message):
     await msg.reply('без поняття як на таке реагувати(')
 
 
-async def send_4_all():
-    await bot.send_message(CHANNEL_ID, " lol")
-
-
 async def scheduler():
-    aioschedule.every().day.at("9:00").do(send_4_all)
-    while True:
-        await aioschedule.run_pending()
-        await asyncio.sleep(1)
-
+    ac = AccessibilityCheck(bot, CHANNEL_ID)
+    await ac.checking(IP)
 
 async def on_startup(_):
     asyncio.create_task(scheduler())
